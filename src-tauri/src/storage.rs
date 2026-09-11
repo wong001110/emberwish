@@ -58,7 +58,7 @@ pub fn write_atomic(path: &Path, raw: &str) -> Result<(), String> {
     file.write_all(raw.as_bytes()).and_then(|_| file.sync_all()).map_err(|_| "Could not flush app data")?;
     drop(file);
     // rename replaces the previous file only after the new snapshot is flushed.
-    fs::rename(&temp, path).map_err(|_| "Could not replace app data snapshot")
+    fs::rename(&temp, path).map_err(|_| "Could not replace app data snapshot".to_string())
 }
 #[cfg(test)]
 mod tests {

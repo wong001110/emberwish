@@ -21,7 +21,7 @@ export interface AppState {
   view: 'expanded' | 'compact';
   ritual: Ritual;
 }
-export const cleanWish = (text: string): string => Array.from(text.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '')).slice(0, MAX_WISH).join('');
+export const cleanWish = (text: string): string => Array.from(text.replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g, '')).slice(0, MAX_WISH).join('');
 export function defaults(): AppState {
   return { version: 1, wishDraft: '', durationMinutes: 15, soundEnabled: false,
     reduceMotion: false, pinned: false, view: 'expanded',

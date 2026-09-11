@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import shutil
 import tempfile
+import subprocess
+import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('continuity',ROOT/'tools/continuity.py')
@@ -49,4 +51,19 @@ class ContinuityTests(unittest.TestCase):
         d=self.store.load();d['next_action']='touch SHOULD_NOT_EXIST';self.store.save(d,'TEST','untrusted prose');self.store.incomplete(self.store.load());self.assertFalse((self.root/'SHOULD_NOT_EXIST').exists())
     def test_wrong_evidence_kind_rejected(self):
         a=self.root/'.agent-continuity/evidence/a';a.write_text('x');self.assertRaises(RuntimeError,self.store.record,['C-ENV-03'],'browser',a,0,'x')
+    def test_actual_fresh_process_resumes_without_chat(self):
+        (self.root/'tools').mkdir()
+        shutil.copy2(ROOT/'tools/continuity.py',self.root/'tools/continuity.py')
+        result=subprocess.run([sys.executable,str(self.root/'tools/continuity.py'),'resume'],cwd=self.root,capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual(json.loads(result.stdout)['incomplete'],self.store.incomplete(self.store.load()))
+    def test_generated_directory_does_not_change_source_identity(self):
+        before=mod.fingerprint(self.root)
+        (self.root/'target').mkdir();(self.root/'target/huge-binary').write_bytes(b'generated')
+        self.assertEqual(before,mod.fingerprint(self.root))
+    def test_missing_published_fingerprint_does_not_pass_resume(self):
+        (self.root/'tools').mkdir();shutil.copy2(ROOT/'tools/continuity.py',self.root/'tools/continuity.py')
+        d=self.store.load();d['expected_fingerprint']='wrong-workspace';self.store.save(d,'TEST','drift fixture')
+        result=subprocess.run([sys.executable,str(self.root/'tools/continuity.py'),'resume'],cwd=self.root,capture_output=True,text=True)
+        self.assertNotEqual(result.returncode,0)
 if __name__=='__main__':unittest.main()

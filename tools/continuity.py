@@ -25,16 +25,27 @@ def stamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 def fingerprint(root: Path) -> str:
+    """Hash actual source, not state/evidence/generated build output.
+
+    Directory pruning matters: traversing node_modules/target before filtering
+    needlessly walks hundreds of thousands of files in a native CI checkout.
+    """
+    files = []
+    for directory, dirs, names in os.walk(root, followlinks=False):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP and not (Path(directory)/d).is_symlink())
+        for name in names:
+            p = Path(directory)/name
+            rel = p.relative_to(root)
+            if p.is_symlink():
+                raise RuntimeError(f'Unexpected source symlink: {rel}')
+            if p.suffix in {'.pyc', '.tmp'} or str(rel).replace('\\', '/') in {'docs/STATUS.md', 'msedgedriver.exe'}:
+                continue
+            if '.agent-continuity' in rel.parts and (len(rel.parts) < 2 or rel.parts[1] not in {'plans', 'sources.json'}):
+                continue
+            files.append((rel.as_posix(), p))
     h = hashlib.sha256()
-    for p in sorted(root.rglob('*')):
-        if not p.is_file():
-            continue
-        rel = p.relative_to(root)
-        if any(part in SKIP for part in rel.parts) or p.suffix in {'.pyc', '.tmp'}:
-            continue
-        if '.agent-continuity' in rel.parts and (len(rel.parts) < 2 or rel.parts[1] not in {'plans', 'sources.json'}):
-            continue
-        h.update(str(rel).replace('\\', '/').encode())
+    for name, p in sorted(files):
+        h.update(name.encode())
         h.update(b'\0')
         h.update(p.read_bytes())
         h.update(b'\0')
@@ -113,7 +124,6 @@ class Store:
         os.replace(path, self.state_path)
         with (self.base / 'events.jsonl').open('a') as out:
             out.write(json.dumps({'time': stamp(), 'version': data['version'], 'event': event, 'detail': detail}) + '\n')
-        # Re-open the published snapshot, not just an in-memory object.
         if json.loads(self.state_path.read_text()) != data:
             raise RuntimeError('Snapshot read-back verification failed')
 
@@ -138,6 +148,7 @@ class Store:
                 c['status'] = 'stale'
         data['scope_hash'] = self.scope_hash
         data['status'] = 'IN_PROGRESS'
+        data.pop('expected_fingerprint', None)
         self.save(data, 'RECONCILIATION', reason)
 
     def validate(self, data):
@@ -199,9 +210,9 @@ class Store:
         return report
 
 SUITES = {
-    'unit': (['npm', 'test'], 'local-test', ['C-ENV-01', 'C-CORE-01', 'C-SAVE-01']),
-    'continuity': ([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_continuity.py'], 'local-test', ['C-AC-02']),
-    'browser': ([sys.executable, 'tests/browser.py'], 'browser', ['C-CORE-02', 'C-SAVE-02', 'C-PERF-01', 'C-A11Y-01']),
+    'unit': (['npm', 'test'], 'local-test', ['C-ENV-01', 'C-CORE-01', 'C-SAVE-01', 'C-SAVE-04']),
+    'continuity': ([sys.executable, 'tools/run_continuity_tests.py'], 'local-test', ['C-AC-02']),
+    'browser': ([sys.executable, 'tests/browser.py'], 'browser', ['C-CORE-02', 'C-SAVE-02', 'C-A11Y-01']),
     'static': ([sys.executable, 'tests/static_checks.py'], 'static-test', ['C-SAFE-01', 'C-TEST-01']),
 }
 
@@ -224,6 +235,8 @@ def main():
             print(json.dumps(report))
         elif a.action == 'resume':
             data = store.load()
+            if data.get('expected_fingerprint') and data['expected_fingerprint'] != fingerprint(ROOT):
+                raise RuntimeError('Workspace drift from published checkpoint; inspect Git and reconcile explicitly.')
             print(json.dumps({'project': data['project'], 'status': data['status'], 'incomplete': store.incomplete(data), 'blockers': data.get('blockers', [])}, indent=2))
         elif a.action == 'gate':
             report = store.gate()
@@ -235,7 +248,7 @@ def main():
             cmd = list(cmd)
             cmd[0] = shutil.which(cmd[0]) or cmd[0]
             result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=180)
-            artifact = store.base/f'evidence/{a.suite}.txt'
+            artifact = store.base/f'evidence/{a.suite}-{store.load()["version"] + 1}.txt'
             artifact.write_text(f'Command: {cmd}\n{result.stdout}\n{result.stderr}\nExit: {result.returncode}\n')
             store.record(ids, kind, artifact, result.returncode, ' '.join(cmd))
             print(result.stdout, end='')

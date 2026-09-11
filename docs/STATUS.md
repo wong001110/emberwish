@@ -1,11 +1,9 @@
 # Development status (derived view)
 
-P0 baseline compile/startup passed in Actions 34570876253 for ff99cbd. P1 passed production browser tests and Windows compile/startup in Actions 34572166738 for 1672086. JavaScript and Rust dependency locks were captured in one follow-up commit 3143b4d.
+P0 and P1 baseline checks passed on their respective commits. P2 production browser checks passed in Actions run 34573285341; the native job failed with Rust error E0308 in storage::write_atomic. This is captured as FND-007, fixed in the P3 verification phase, and still awaits its own real compiler/test result.
 
-P1: manual light/extinguish/finish, wishes, 5/15/30-minute burns, original Canvas bowl/smoke, browser persistence, silent-by-default chime, reduced motion and expanded/compact layouts. The local 28 Node tests and 15 continuity tests passed; the production browser suite passed on GitHub CI, not in the locally restricted browser.
+P3 includes 30 Node tests, 18 continuity tests (including a separate process with no chat context), native input/storage tests and real WebView2 integration automation. Local TypeScript/Node/continuity/static checks passed before publication. The current branch must run its own web and Windows CI before current-source evidence is accepted.
 
-P2 implementation: app-owned bounded/atomic native storage, input validation, transparent compact window, monitor-aware expanded sizing, canvas dragging, pin/hide, tray recovery, safe quit flushing and single-instance recovery. Six Rust storage tests and real Windows WebDriver coverage are included. These new native changes must pass their own CI before acceptance.
+Implemented product: manual light/extinguish/finish, wishes, 5/15/30-minute burns, original Canvas bowl/smoke, expanded/compact layouts, opt-in chime, reduced motion, native bounded file store, recoverable tray, pin/hide, canvas drag, monitor-fit sizing and single-instance recovery.
 
-Known findings FND-001..004 are mapped, with fixes and regression paths. Full native tray pointer interaction, real underlay click-through, changed monitor/DPI behavior, physical-machine profiling and independent fresh review still require evidence. No claim of a finalized release or complete desktop validation is made.
-
-Local browser navigation is administratively blocked and was not bypassed. Offline visual fixtures were explicitly mocked for storage; they are not accepted persistence/native evidence. Use CI artifacts for actual production browser/native outputs.
+Final gates still distinguish tray/input-underlay pointer behavior, changed monitor/DPI behavior, physical-machine profiling and independent fresh review. None is silently waived or counted as complete. No final merge or release has been made.

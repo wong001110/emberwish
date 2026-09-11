@@ -14,3 +14,4 @@ src-tauri/icons/
 .DS_Store
 .agent-continuity/*.tmp
 .agent-continuity/*.lock
+msedgedriver.exe

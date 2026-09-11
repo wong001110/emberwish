@@ -19,3 +19,9 @@ Use versioned JSON snapshots plus evidence records and an append-only event ledg
 ## ADR-004: explicit native boundaries
 
 Browser effects do not verify native transparency, hit testing, tray recovery, multi-monitor placement or target-machine resource consumption. CI and dedicated native tests are separate checks. An unavailable independent reviewer blocks final review/merge; it does not justify fabricating a review.
+
+## ADR-005: reproducible evidence handoff
+
+Enforce LF source endings through `.gitattributes`. The continuity fingerprint hashes source/config/tests/lockfiles and prunes generated directories before traversal. Only the derived `docs/STATUS.md` and generated test-driver binary are excluded in addition to the explicit build/state directories. Evidence and state updates therefore do not silently invalidate the source they describe, while an actual source change does.
+
+CI exports its exact tracked source and identity into its artifacts. A downloaded snapshot must match every recorded file hash and the source fingerprint before its evidence is attached. A checkpoint can reference an earlier tested commit when the only subsequent changes are state/evidence/derived-status files. It cannot transfer evidence across different implementation fingerprints.
