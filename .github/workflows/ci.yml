@@ -23,20 +23,33 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: npm install
+        shell: bash
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:continuity
+      - run: pip install -r requirements-dev.txt
+      - run: python -m playwright install --with-deps chromium
       - run: npm run build
-      - name: Preserve build and lockfile
+      - name: Browser acceptance against production build
+        run: npm run test:browser
+        env:
+          EMBERWISH_WEB_ROOT: dist
+      - name: Preserve build and evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: web-build-${{ github.sha }}
           path: |
             dist
             package-lock.json
+            .reports
+          include-hidden-files: true
   windows:
     runs-on: windows-latest
     timeout-minutes: 35
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,7 +59,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: rustup default stable
-      - run: npm install
+      - name: Install dependencies
+        shell: bash
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - run: npm run icons
       - run: npm run build
       - run: cargo test --manifest-path src-tauri/Cargo.toml
@@ -65,7 +80,7 @@ jobs:
               if ($p.MainWindowHandle -ne 0) { $ok = $true; break }
             }
             if (-not $ok) { throw 'No native window became available' }
-            Write-Output 'PASS: executable remained alive and exposed a native window handle. Not an overlay/DPI/power test.'
+            Write-Output 'PASS: native startup only; not overlay/DPI/power acceptance.'
           } finally {
             if (-not $p.HasExited) { Stop-Process -Id $p.Id }
           }
@@ -78,3 +93,13 @@ jobs:
             src-tauri/target/debug/emberwish.exe
             src-tauri/Cargo.lock
             package-lock.json
+      - name: Publish initial dependency locks as one coherent commit
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/feat/emberwish-mvp'
+        shell: bash
+        run: |
+          if git ls-files --error-unmatch package-lock.json src-tauri/Cargo.lock >/dev/null 2>&1; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- package-lock.json src-tauri/Cargo.lock
+          git commit -m 'build: lock verified JavaScript and Rust dependencies'
+          git push origin HEAD:refs/heads/feat/emberwish-mvp

@@ -3,3 +3,6 @@
 {"time": "2026-09-11T06:35:44.266463+00:00", "version": 3, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
 {"time": "2026-09-11T06:36:58.736490+00:00", "version": 4, "event": "RECONCILIATION", "detail": "Normalize source manifests before initial durable branch publication."}
 {"time": "2026-09-11T06:36:59.509046+00:00", "version": 5, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
+{"time": "2026-09-11T06:48:24.754634+00:00", "version": 6, "event": "RECONCILIATION", "detail": "FND-001: capture last-write-wins persistence race and its regression check before remediation."}
+{"time": "2026-09-11T06:48:25.560043+00:00", "version": 7, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
+{"version":8,"event":"RECONCILIATION","detail":"P1 implementation checkpoint. Prior capture/source evidence is stale after implementation; all current remote-head checks await re-verification. FND-001 fixed with four writer regression cases. Native controls are next, not complete."}
