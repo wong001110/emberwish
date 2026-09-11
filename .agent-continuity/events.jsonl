@@ -1,0 +1,5 @@
+{"time": "2026-09-11T06:34:17.550539+00:00", "version": 1, "event": "BOOTSTRAPPED", "detail": "Scope captured before implementation; single writer on development branch."}
+{"time": "2026-09-11T06:34:18.330966+00:00", "version": 2, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
+{"time": "2026-09-11T06:35:44.266463+00:00", "version": 3, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
+{"time": "2026-09-11T06:36:58.736490+00:00", "version": 4, "event": "RECONCILIATION", "detail": "Normalize source manifests before initial durable branch publication."}
+{"time": "2026-09-11T06:36:59.509046+00:00", "version": 5, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}

@@ -1,0 +1,80 @@
+name: Verify Emberwish
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: emberwish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Preserve build and lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-${{ github.sha }}
+          path: |
+            dist
+            package-lock.json
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: rustup default stable
+      - run: npm install
+      - run: npm run icons
+      - run: npm run build
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - name: Build actual desktop executable
+        run: npm run tauri -- build --debug --no-bundle
+      - name: Startup smoke
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath src-tauri/target/debug/emberwish.exe -PassThru
+          try {
+            $ok = $false
+            for ($i = 0; $i -lt 30; $i++) {
+              Start-Sleep -Seconds 1
+              $p.Refresh()
+              if ($p.HasExited) { throw "App exited during startup: $($p.ExitCode)" }
+              if ($p.MainWindowHandle -ne 0) { $ok = $true; break }
+            }
+            if (-not $ok) { throw 'No native window became available' }
+            Write-Output 'PASS: executable remained alive and exposed a native window handle. Not an overlay/DPI/power test.'
+          } finally {
+            if (-not $p.HasExited) { Stop-Process -Id $p.Id }
+          }
+      - name: Preserve native executable and dependency locks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-debug-${{ github.sha }}
+          path: |
+            src-tauri/target/debug/emberwish.exe
+            src-tauri/Cargo.lock
+            package-lock.json
