@@ -14,11 +14,11 @@ Expanded mode holds the ritual controls; compact mode leaves a transparent widge
 
 ## Status
 
-This is an **MVP development build**, not a finalized or signed release. See [development status](docs/STATUS.md) for exact verified commits and remaining gates. Browser tests, Windows WebView2 integration, OS input-routing checks and physical-machine profiling are distinct evidence levels. Do not interpret a green build as full desktop acceptance.
+This is an **MVP development build**, not a finalized or signed release. See [development status](docs/STATUS.md) for exact verified commits and remaining requirements. Browser tests, Windows WebView2 integration, OS input-routing checks and physical-machine profiling are distinct evidence levels. Do not interpret a green build as full desktop acceptance.
 
 ## Run a browser preview
 
-Requires Node.js 22.12+ and npm. Python 3.11+ is used by the test/continuity tools.
+Requires Node.js 22.12+ and npm. Python 3.11+ is used by the browser, native and source-evidence test tools; no private agent state is needed.
 
 ```sh
 npm ci
@@ -49,7 +49,7 @@ Locally generated packages are unsigned unless signing is separately configured.
 ```sh
 npm run typecheck
 npm test
-npm run test:continuity
+python -m unittest discover -s tests -p 'test_workspace_evidence.py'
 python tests/static_checks.py
 npm run build
 pip install -r requirements-dev.txt
@@ -59,8 +59,8 @@ npm run test:browser
 
 Set `EMBERWISH_WEB_ROOT=dist` to test the production build. Without it, the browser test compiles an explicitly labelled offline TypeScript preview. Native tests are intentionally restricted to disposable Windows CI sessions so they cannot overwrite a personal ritual.
 
-## Continuity and architecture
+## Development practice and architecture
 
-Start a development session with `python tools/continuity.py resume`, then read [AGENTS.md](AGENTS.md), the captured sources/manifest and current evidence. The completion gate fails closed on missing or stale checks. An independent fresh review is required before finalization; self-review is not a substitute.
+Read [AGENTS.md](AGENTS.md) and the ordinary status, architecture and verification documents. The repo follows AI-Native Development Practice; optional execution trackers stay outside the checkout and are not build or CI prerequisites. Independent fresh review remains required before MVP finalization; self-review is not a substitute.
 
 Tauri 2 + TypeScript + Vite + Canvas 2D. No React, backend, database, runtime AI, remote assets or telemetry. Canvas is a deliberate small-scene choice; the renderer boundary can support a richer engine later without changing the domain model. See [architecture](docs/ARCHITECTURE.md) and [verification](docs/VERIFICATION.md).

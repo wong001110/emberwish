@@ -3,12 +3,9 @@ on:
   push:
     branches: [main, 'feat/**']
     paths-ignore:
-      - '.agent-continuity/state.json'
-      - '.agent-continuity/events.jsonl'
-      - '.agent-continuity/evidence/**'
       - 'docs/STATUS.md'
   pull_request:
-    branches: [main]
+    branches: [main, 'feat/emberwish-mvp']
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,7 +28,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
-      - run: npm run test:continuity
+      - name: Source-evidence export tests
+        run: python -m unittest discover -s tests -p 'test_workspace_evidence.py'
       - run: python tests/static_checks.py
       - run: pip install -r requirements-dev.txt
       - run: python -m playwright install --with-deps chromium

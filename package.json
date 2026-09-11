@@ -9,8 +9,6 @@
     "build:offline": "python tools/offline_preview.py",
     "test": "tsc --outDir .test-build && node --test tests/*.test.mjs",
     "test:browser": "python tests/browser.py",
-    "test:continuity": "python tools/run_continuity_tests.py",
-    "continuity": "python tools/continuity.py",
     "icons": "python tools/icons.py", "tauri": "tauri",
     "desktop:dev": "npm run icons && tauri dev", "desktop:build": "npm run icons && tauri build"
   },
