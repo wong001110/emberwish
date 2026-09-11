@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.preview/
+.test-build/
+.reports/
+__pycache__/
+*.pyc
+src-tauri/target/
+src-tauri/gen/
+src-tauri/icons/
+.env
+.env.*
+!.env.example
+.DS_Store
+.agent-continuity/*.tmp
+.agent-continuity/*.lock
+msedgedriver.exe

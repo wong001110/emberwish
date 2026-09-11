@@ -1,0 +1,104 @@
+name: Verify Emberwish
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '.agent-continuity/state.json'
+      - '.agent-continuity/events.jsonl'
+      - '.agent-continuity/evidence/**'
+      - 'docs/STATUS.md'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: emberwish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:continuity
+      - run: python tests/static_checks.py
+      - run: pip install -r requirements-dev.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: npm run build
+      - name: Browser acceptance against production build
+        run: npm run test:browser
+        env:
+          EMBERWISH_WEB_ROOT: dist
+      - name: Export exact verified source
+        if: always()
+        run: python tools/workspace_evidence.py
+      - name: Preserve build and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-${{ github.sha }}
+          path: |
+            dist
+            package-lock.json
+            .reports
+          include-hidden-files: true
+  windows:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: rustup default stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+      - run: npm ci
+      - run: npm run icons
+      - run: npm run build
+      - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+      - name: Build actual desktop executable
+        run: npm run tauri -- build --debug --no-bundle
+      - name: Install native test drivers
+        shell: pwsh
+        run: |
+          cargo install tauri-driver --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo install --git https://github.com/chippers/msedgedriver-tool
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$HOME/.cargo/bin/msedgedriver-tool.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $PWD.Path >> $env:GITHUB_PATH
+      - name: Real Windows WebView2 acceptance
+        run: python tests/native_webdriver.py
+      - name: Export exact native source
+        if: always()
+        run: python tools/workspace_evidence.py
+      - name: Preserve native executable and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-debug-${{ github.sha }}
+          path: |
+            src-tauri/target/debug/emberwish.exe
+            src-tauri/Cargo.lock
+            package-lock.json
+            .reports
+          include-hidden-files: true

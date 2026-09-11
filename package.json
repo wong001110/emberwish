@@ -1,0 +1,18 @@
+{
+  "name": "emberwish", "version": "0.1.0", "private": true, "type": "module",
+  "description": "A tiny desktop incense ritual. Visual-only, local-first, quietly yours.",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:offline": "python tools/offline_preview.py",
+    "test": "tsc --outDir .test-build && node --test tests/*.test.mjs",
+    "test:browser": "python tests/browser.py",
+    "test:continuity": "python tools/run_continuity_tests.py",
+    "continuity": "python tools/continuity.py",
+    "icons": "python tools/icons.py", "tauri": "tauri",
+    "desktop:dev": "npm run icons && tauri dev", "desktop:build": "npm run icons && tauri build"
+  },
+  "devDependencies": { "@tauri-apps/cli": "^2.0.0", "typescript": "5.8.3", "vite": "^7.0.0" }
+}

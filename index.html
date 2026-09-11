@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A tiny, local-first desktop incense ritual.">
+  <title>Emberwish — a little room for calm</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <main id="app" class="app-shell" aria-label="Emberwish incense ritual">
+    <header class="topbar">
+      <div class="brand" id="drag-handle"><span class="brand-mark" aria-hidden="true">♨</span><span>emberwish</span><span class="edition">a small ritual</span></div>
+      <div class="window-actions"><span class="local-badge">LOCAL & QUIET</span><button id="compact-top" class="icon-button" aria-label="Switch to compact view" title="Keep in a corner">↙</button><button id="hide" class="icon-button native-only" aria-label="Hide to system tray" title="Hide to tray">−</button></div>
+    </header>
+    <div id="notice" class="notice" role="alert" hidden></div>
+    <div class="ritual-layout">
+      <section class="scene-panel" aria-label="Incense scene">
+        <div class="scene-top"><span id="scene-label" class="scene-kicker">YOUR QUIET CORNER</span><span class="scene-number" aria-hidden="true">01 / RITUAL</span></div>
+        <div class="moon" aria-hidden="true"></div>
+        <canvas id="incense" aria-label="Jade incense bowl. Use the Light incense button to begin." role="img"></canvas>
+        <div class="compact-toolbar"><button id="expand" class="icon-button" aria-label="Expand ritual window" title="Expand">↗</button><button id="compact-light" class="icon-button" aria-label="Light incense" title="Light incense">♨</button><button id="compact-hide" class="icon-button native-only" aria-label="Hide compact window to tray" title="Hide">−</button></div>
+        <div class="scene-caption"><p id="display-wish">A little space for a little wish.</p><span class="scene-caption-detail">LET THE WORLD WAIT A MOMENT</span></div>
+        <div class="burn-state"><span id="status-dot" class="status-dot"></span><span id="status-text" role="status" aria-live="polite">Ready when you are</span><span id="remaining" class="time">15:00</span></div>
+        <progress id="progress" max="1" value="0" aria-label="Incense burned"></progress>
+      </section>
+      <section class="ritual-panel" aria-labelledby="ritual-heading">
+        <p class="eyebrow">A MOMENT, JUST FOR YOU</p>
+        <h1 id="ritual-heading">Light a wish.<br>Let it linger.</h1>
+        <p class="intro">For peaceful desktops<br>and uneventful deployments.</p>
+        <label for="wish" class="field-label">What are you wishing for? <span>optional</span></label>
+        <div class="wish-wrap"><textarea id="wish" rows="3" maxlength="320" placeholder="May this deploy be uneventful…" aria-describedby="wish-help"></textarea><span id="wish-count" aria-hidden="true">0 / 160</span></div>
+        <span id="wish-help" class="sr-only">Up to 160 characters. Your wish stays on this device.</span>
+        <div class="wish-suggestions" aria-label="Wish suggestions"><button type="button" data-wish="May this deploy be uneventful.">Smooth deploy</button><button type="button" data-wish="A clear mind, one thing at a time.">A clear mind</button><button type="button" data-wish="No big wish. Just a quiet moment.">Just because</button></div>
+        <fieldset class="duration"><legend class="field-label">Let it burn for</legend><div class="duration-options"><label><input type="radio" name="duration" value="5"><span>5 <small>min</small></span></label><label><input type="radio" name="duration" value="15" checked><span>15 <small>min</small></span></label><label><input type="radio" name="duration" value="30"><span>30 <small>min</small></span></label></div></fieldset>
+        <button id="light" class="primary-button" type="button" disabled><span aria-hidden="true">♨</span><span id="light-label">Preparing your ritual…</span></button>
+        <p class="disclaimer">No promises. Just a moment of calm.</p>
+        <div class="preferences"><label class="preference"><input id="sound" type="checkbox"><span>Soft chime</span></label><label class="preference"><input id="motion" type="checkbox"><span>Less motion</span></label></div>
+      </section>
+    </div>
+    <footer class="footer"><span class="footer-note"><span aria-hidden="true">✦</span> Wishes stay on this device.</span><div class="footer-actions"><button id="pin" class="text-button native-only" type="button" aria-pressed="false">Pin on top</button><button id="pass-through" class="text-button native-only" type="button" title="The tray menu always restores interaction">Click-through</button><button id="compact" class="text-button" type="button">Keep in a corner <span aria-hidden="true">↙</span></button></div></footer>
+    <div id="preview-label" class="preview-label">BROWSER PREVIEW · DESKTOP CONTROLS AVAILABLE IN THE APP</div>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
