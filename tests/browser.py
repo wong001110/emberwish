@@ -46,7 +46,7 @@ try:
     page.reload();expect(page.locator('#light')).to_be_enabled();expect(page.locator('#status-text')).to_have_text('A wish is quietly burning')
     assert page.evaluate("JSON.parse(localStorage.getItem('emberwish.state.v1')).ritual.startedAt")==saved['ritual']['startedAt']
     checks.append('real localStorage reload keeps original start time')
-    page.locator('#motion').check();page.wait_for_timeout(120);still=count();page.wait_for_timeout(180);assert count()==still
+    page.locator('#motion').check();page.wait_for_timeout(120);still=count();page.wait_for_timeout(1250);assert count()-still<=2,'Reduced-motion scene kept its high-frequency loop'
     page.emulate_media(reduced_motion='reduce');expect(page.locator('#motion')).to_be_disabled();checks.append('reduced motion has no continuous smoke loop')
     page.screenshot(path=str(report/'ritual-expanded.png'),full_page=True)
     page.locator('#compact').click();expect(page.locator('body')).to_have_class('compact');expect(page.locator('#expand')).to_be_focused()

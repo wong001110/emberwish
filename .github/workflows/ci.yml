@@ -23,11 +23,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        shell: bash
-        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:continuity
+      - run: python tests/static_checks.py
       - run: pip install -r requirements-dev.txt
       - run: python -m playwright install --with-deps chromium
       - run: npm run build
@@ -48,8 +48,6 @@ jobs:
   windows:
     runs-on: windows-latest
     timeout-minutes: 35
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -59,32 +57,28 @@ jobs:
         with:
           python-version: '3.12'
       - run: rustup default stable
-      - name: Install dependencies
-        shell: bash
-        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
       - run: npm run icons
       - run: npm run build
-      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - name: Build actual desktop executable
         run: npm run tauri -- build --debug --no-bundle
-      - name: Startup smoke
+      - name: Install native test drivers
         shell: pwsh
         run: |
-          $p = Start-Process -FilePath src-tauri/target/debug/emberwish.exe -PassThru
-          try {
-            $ok = $false
-            for ($i = 0; $i -lt 30; $i++) {
-              Start-Sleep -Seconds 1
-              $p.Refresh()
-              if ($p.HasExited) { throw "App exited during startup: $($p.ExitCode)" }
-              if ($p.MainWindowHandle -ne 0) { $ok = $true; break }
-            }
-            if (-not $ok) { throw 'No native window became available' }
-            Write-Output 'PASS: native startup only; not overlay/DPI/power acceptance.'
-          } finally {
-            if (-not $p.HasExited) { Stop-Process -Id $p.Id }
-          }
-      - name: Preserve native executable and dependency locks
+          cargo install tauri-driver --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo install --git https://github.com/chippers/msedgedriver-tool
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$HOME/.cargo/bin/msedgedriver-tool.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $PWD.Path >> $env:GITHUB_PATH
+      - name: Real Windows WebView2 acceptance
+        run: python tests/native_webdriver.py
+      - name: Preserve native executable and evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -93,13 +87,5 @@ jobs:
             src-tauri/target/debug/emberwish.exe
             src-tauri/Cargo.lock
             package-lock.json
-      - name: Publish initial dependency locks as one coherent commit
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/feat/emberwish-mvp'
-        shell: bash
-        run: |
-          if git ls-files --error-unmatch package-lock.json src-tauri/Cargo.lock >/dev/null 2>&1; then exit 0; fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- package-lock.json src-tauri/Cargo.lock
-          git commit -m 'build: lock verified JavaScript and Rust dependencies'
-          git push origin HEAD:refs/heads/feat/emberwish-mvp
+            .reports
+          include-hidden-files: true

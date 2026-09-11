@@ -1,11 +1,11 @@
 # Development status (derived view)
 
-P0 baseline build and Windows startup passed in GitHub Actions run 34570876253 for commit ff99cbd79d9c4cb1be9f501cadfbd3b0648cc034. This evidence does not verify later feature commits.
+P0 baseline compile/startup passed in Actions 34570876253 for ff99cbd. P1 passed production browser tests and Windows compile/startup in Actions 34572166738 for 1672086. JavaScript and Rust dependency locks were captured in one follow-up commit 3143b4d.
 
-P1 implements manual lighting, elapsed-time burning, extinguishing, wishes, local state, silent-by-default chimes, reduced motion and expanded/compact scene layouts. Local TypeScript compilation, 28 Node tests and 15 continuity regression tests passed. FND-001 (a same-tick save race) has a regression test and implementation fix.
+P1: manual light/extinguish/finish, wishes, 5/15/30-minute burns, original Canvas bowl/smoke, browser persistence, silent-by-default chime, reduced motion and expanded/compact layouts. The local 28 Node tests and 15 continuity tests passed; the production browser suite passed on GitHub CI, not in the locally restricted browser.
 
-Local Chromium navigation to localhost/file URLs is blocked by administrator policy. Policy was not changed. Offline set_content visual inspection used an explicit in-memory storage adapter and showed the actual compiled scene without page errors; it is NOT real browser persistence or desktop evidence. Real production-build browser tests run separately in CI.
+P2 implementation: app-owned bounded/atomic native storage, input validation, transparent compact window, monitor-aware expanded sizing, canvas dragging, pin/hide, tray recovery, safe quit flushing and single-instance recovery. Six Rust storage tests and real Windows WebDriver coverage are included. These new native changes must pass their own CI before acceptance.
 
-Next: implement native persistence, tray, window actions, recovery and native tests; reconcile the state store to the revised scope, then re-run current evidence. The stored P0 capture evidence is stale and must not be promoted to completion.
+Known findings FND-001..004 are mapped, with fixes and regression paths. Full native tray pointer interaction, real underlay click-through, changed monitor/DPI behavior, physical-machine profiling and independent fresh review still require evidence. No claim of a finalized release or complete desktop validation is made.
 
-Finalization still requires every current native acceptance check and independent fresh review. No final merge/release is authorized by a passing compile alone.
+Local browser navigation is administratively blocked and was not bypassed. Offline visual fixtures were explicitly mocked for storage; they are not accepted persistence/native evidence. Use CI artifacts for actual production browser/native outputs.

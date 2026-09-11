@@ -71,6 +71,7 @@ function render(): void {
   if (burning && isVisible()) tickTimer = window.setTimeout(tick, 1000);
 }
 function tick(): void {
+  if (tickTimer !== null) clearTimeout(tickTimer);
   tickTimer = null;
   const next = advance(state, Date.now());
   if (next !== state) { state = next; void save(); if (audio) chime(); }
@@ -114,7 +115,7 @@ byId('pass-through').addEventListener('click', async () => {
   notice('Click-through mode: use the Emberwish tray icon → Show & interact to restore control.');
   await act('click_through');
 });
-for (const id of ['drag-handle', 'scene-label']) byId(id).addEventListener('pointerdown', event => { if (event.button === 0 && isNative()) void act('drag'); });
+for (const id of ['drag-handle', 'incense']) byId(id).addEventListener('pointerdown', event => { if (event.button === 0 && isNative()) void act('drag'); });
 byId('sound').addEventListener('change', () => { if (!ready) return; state = { ...state, soundEnabled: byId<HTMLInputElement>('sound').checked }; chime(); void save(); render(); });
 byId('motion').addEventListener('change', () => { if (!ready) return; state = { ...state, reduceMotion: byId<HTMLInputElement>('motion').checked }; void save(); render(); });
 media.addEventListener('change', render);
@@ -130,6 +131,11 @@ async function start(): Promise<void> {
     try {
       cleanups.push(await listenNative<boolean>('desktop-visibility', visible => { nativeVisible = visible; tick(); }));
       cleanups.push(await listenNative<null>('request-hide', async () => { await save(); await act('hide'); }));
+      cleanups.push(await listenNative<null>('request-quit', async () => {
+        await save();
+        if (writer.lastSaveSucceeded) await act('quit');
+        else { await act('expand'); notice('Could not save before quitting. Retry after storage is available, or use Force quit in the tray to discard unsaved changes.'); }
+      }));
       await desktop(state.view === 'compact' ? 'compact' : 'expand');
       await desktop(state.pinned ? 'pin' : 'unpin');
     } catch { notice('Some desktop controls are unavailable. The ritual remains usable.'); }

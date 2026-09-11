@@ -6,3 +6,4 @@
 {"time": "2026-09-11T06:48:24.754634+00:00", "version": 6, "event": "RECONCILIATION", "detail": "FND-001: capture last-write-wins persistence race and its regression check before remediation."}
 {"time": "2026-09-11T06:48:25.560043+00:00", "version": 7, "event": "CHECK_PASSED", "detail": ["C-AC-01"]}
 {"version":8,"event":"RECONCILIATION","detail":"P1 implementation checkpoint. Prior capture/source evidence is stale after implementation; all current remote-head checks await re-verification. FND-001 fixed with four writer regression cases. Native controls are next, not complete."}
+{"version":9,"event":"RECONCILIATION","detail":"P1 web/browser and Windows startup CI succeeded on 1672086. Dependency locks committed as 3143b4d. P2 captures FND-002..004 before native rework; adds real file/window/tray commands and native WebDriver tests. P2 remains unverified until its exact-head CI is observed."}

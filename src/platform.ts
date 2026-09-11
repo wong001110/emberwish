@@ -14,6 +14,8 @@ export async function loadState(): Promise<string | null> {
  * snapshot coalesces input bursts; callers await all saves present before settling. */
 export class StateWriter {
   private pending: string | null = null;
+  private saved = true;
+  get lastSaveSucceeded(): boolean { return this.saved; }
   private running: Promise<void> | null = null;
   constructor(
     private readonly onError: (message: string) => void,
@@ -39,8 +41,8 @@ export class StateWriter {
     while (this.pending !== null) {
       const json = this.pending;
       this.pending = null;
-      try { await this.persist(json); }
-      catch { this.onError('This change could not be saved. The ritual still works, but may not survive a restart.'); }
+      try { await this.persist(json); this.saved = true; }
+      catch { this.saved = false; this.onError('This change could not be saved. The ritual still works, but may not survive a restart.'); }
     }
   }
 }

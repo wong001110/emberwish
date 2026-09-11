@@ -21,7 +21,7 @@ export class IncenseScene {
     this.ritual = ritual; this.reduced = reduced; this.visible = visible;
     const animate = shouldAnimate(ritual.status === 'burning', visible, reduced);
     if (!animate && this.timer !== null) { window.clearTimeout(this.timer); this.timer = null; }
-    if (visible && changed) this.draw();
+    if (visible && (changed || (reduced && ritual.status === 'burning'))) this.draw();
     if (animate && this.timer === null) this.schedule();
   }
   private schedule(): void {
